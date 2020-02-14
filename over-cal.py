@@ -35,9 +35,13 @@ def main():
     appointments = calres['appointment']['item']
     dates = calres['appointment']['date']
     app_details = dict()
+    locations = dict()
     for id,item in appointments.items():
-        app_detail = requests.get(appurl, cookies=session.cookies, params={'id':id}).json()['item']
-        app_details[id] = app_detail
+        app_detail = requests.get(appurl, cookies=session.cookies, params={'id':id}).json()
+        app_details[id] = app_detail['item']
+        if len(locations) == 0:
+            for location in app_detail['location']:
+                locations[location['id']] = location['fullname']
     worktypes = ['','Afspraak:','Bijles:','Begeleiding']
 
     from_date = datetime.now()
@@ -82,8 +86,8 @@ def main():
                             contact = contacts[person['id']]
                         people += f"{contact['fullname']}, {contact['mobile']}, {contact['email']}\n"
 
-                        #people[person['id']] = contact
                 event.add('description',vText(people))
+                event.add('location',locations[app_details[id]['locationid']])
                 cal.add_component(event)
     write_ics(cal,from_date, username)
 
