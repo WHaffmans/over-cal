@@ -72,10 +72,10 @@ def main():
                 event.add('dtstamp', datetime.now())
 
                 cal.add_component(event)
-    write_ics(cal)
+    write_ics(cal,from_date, username)
 
-def write_ics(cal):
-    f = open('rooster.ics','wb')
+def write_ics(cal, from_date, username):
+    f = open(f'{from_date.strftime("%Y-%m-%d")}_Rooster_{username}.ics','wb')
     f.write(cal.to_ical())
     f.close()
 
