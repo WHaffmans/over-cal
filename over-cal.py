@@ -9,6 +9,7 @@ def main():
     sessionurl = rest + 'Session'
     calurl = rest + 'ContactAgenda'
     appurl= rest + 'ResPersonAppointment'
+    contacturl = rest + 'ResContactHeader'
 
     try:
         with open('config.json','r') as fh:
@@ -29,6 +30,7 @@ def main():
     session = requests.post(sessionurl, data=json.dumps(payload))
     userid = requests.get(sessionurl, cookies=session.cookies).json()['id']
     calres = requests.get(calurl, cookies=session.cookies, params={'id':userid}).json()
+    
 
     appointments = calres['appointment']['item']
     dates = calres['appointment']['date']
@@ -44,7 +46,7 @@ def main():
     cal = Calendar()
     cal.add('prodid', 'OVER Rooster')
     cal.add('version','2.0')
-
+    contacts = dict()
 
     for date, ids in sorted(dates.items()):
         date = datetime.strptime(date,'%Y-%m-%d')
@@ -58,19 +60,30 @@ def main():
 
                 desc = app_details[id]['description']
                 worktype = worktypes[int(app_details[id]['typeid'])]
-                people = []
-                for person in app_details[id]['person']:
-                    if person['id'] not in [userid, '1765']:
-                        people.append(person['text'])
-                
+                people = ''
+
                 event = Event()
 
                 event.add('summary', f'{worktype} {desc}')
                 event.add('dtstamp', from_date)
                 event.add('dtstart', startdate)
                 event.add('dtend', enddate)
-                event.add('dtstamp', datetime.now())
 
+                for person in app_details[id]['person']:
+                    if person['id'] not in [userid, '1765']:
+                        if person['id'] not in contacts:
+                            contact = requests.get(
+                                contacturl, 
+                                cookies=session.cookies, 
+                                params={'contactid':person['id']}
+                                ).json()['contact']   
+                            contacts[person['id']] = contact
+                        else:
+                            contact = contacts[person['id']]
+                        people += f"{contact['fullname']}, {contact['mobile']}, {contact['email']}\n"
+
+                        #people[person['id']] = contact
+                event.add('description',vText(people))
                 cal.add_component(event)
     write_ics(cal,from_date, username)
 
