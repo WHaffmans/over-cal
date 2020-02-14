@@ -10,10 +10,20 @@ def main():
     calurl = rest + 'ContactAgenda'
     appurl= rest + 'ResPersonAppointment'
 
-    username = input('username:')
-    password = input('password:')
-    weeks = int(input('Hoeveel weken wil je downloaden?'))
-
+    try:
+        with open('config.json','r') as fh:
+            config = json.load(fh)
+            username = config['username']
+            password = config['password']
+            weeks = config['weeks']
+    except FileNotFoundError:
+        username = input('username:')
+        password = input('password:')
+        weeks = int(input('Hoeveel weken wil je downloaden?'))
+        config = {'username': username,'password': password, 'weeks': weeks}
+        with open('config.json', 'w') as fh:
+            json.dump(config,fh)
+    
 
     payload = {"username": username, "password": password}
     session = requests.post(sessionurl, data=json.dumps(payload))
