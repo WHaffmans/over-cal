@@ -59,7 +59,7 @@ def main():
     till_date = from_date + timedelta(weeks=weeks_to_download)
 
     calendar = Calendar()
-    calendar.add('prodid', 'OVER Rooster')
+    calendar.add('prodid', '-//OVER Rooster//NOSGML//NL')
     calendar.add('version', '2.0')
     contacts = dict()
 
