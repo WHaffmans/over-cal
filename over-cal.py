@@ -5,36 +5,36 @@ from icalendar import Calendar, Event, vText
 
 
 def main():
-    rest = 'https://abc.over.nu/over/data/rest.php/'
-    sessionurl = rest + 'Session'
-    calurl = rest + 'ContactAgenda'
-    appurl = rest + 'ResPersonAppointment'
-    contacturl = rest + 'ResContactHeader'
+    rest_base_url = 'https://abc.over.nu/over/data/rest.php/'
+    session_url = rest_base_url + 'Session'
+    calendar_url = rest_base_url + 'ContactAgenda'
+    appointment_url = rest_base_url + 'ResPersonAppointment'
+    contact_url = rest_base_url + 'ResContactHeader'
 
     try:
         with open('config.json', 'r') as fh:
             config = json.load(fh)
             username = config['username']
             password = config['password']
-            weeks = config['weeks']
+            weeks_to_download = config['weeks']
     except FileNotFoundError:
         username = input('username:')
         password = input('password:')
-        weeks = int(input('Hoeveel weken wil je downloaden?'))
+        weeks_to_download = int(input('Hoeveel weken wil je downloaden?'))
         config = {
             'username': username,
             'password': password,
-            'weeks': weeks
+            'weeks': weeks_to_download
             }
         with open('config.json', 'w') as fh:
             json.dump(config, fh)
 
-    payload = {"username": username, "password": password}
-    session = requests.post(sessionurl, data=json.dumps(payload))
-    userid = requests.get(sessionurl, cookies=session.cookies).json()['id']
+    login_data = {"username": username, "password": password}
+    session = requests.post(session_url, data=json.dumps(login_data))
+    userid = requests.get(session_url, cookies=session.cookies).json()['id']
 
     calres = requests.get(
-        calurl,
+        calendar_url,
         cookies=session.cookies,
         params={'id': userid}
         ).json()
@@ -45,7 +45,7 @@ def main():
     locations = dict()
     for id, item in appointments_item.items():
         app_detail = requests.get(
-            appurl,
+            appointment_url,
             cookies=session.cookies,
             params={'id': id}
             ).json()
@@ -56,11 +56,11 @@ def main():
     worktypes = ['', 'Afspraak:', 'Bijles:', 'Begeleiding']
 
     from_date = datetime.now()
-    till_date = from_date + timedelta(weeks=weeks)
+    till_date = from_date + timedelta(weeks=weeks_to_download)
 
-    cal = Calendar()
-    cal.add('prodid', 'OVER Rooster')
-    cal.add('version', '2.0')
+    calendar = Calendar()
+    calendar.add('prodid', 'OVER Rooster')
+    calendar.add('version', '2.0')
     contacts = dict()
 
     for date, ids in sorted(appointment_dates.items()):
@@ -92,7 +92,7 @@ def main():
                     if person['id'] not in [userid, '1765']:
                         if person['id'] not in contacts:
                             contact = requests.get(
-                                contacturl,
+                                contact_url,
                                 cookies=session.cookies,
                                 params={'contactid': person['id']}
                                 ).json()['contact']
@@ -105,9 +105,9 @@ def main():
 
                 event.add('description', vText(people))
                 event.add('location', locations[app_details[id]['locationid']])
-                cal.add_component(event)
+                calendar.add_component(event)
 
-    write_ics(cal, from_date, username)
+    write_ics(calendar, from_date, username)
 
 
 def write_ics(cal, from_date, username):
