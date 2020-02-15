@@ -3,7 +3,6 @@ import json
 from datetime import datetime, timedelta
 from icalendar import Calendar, Event, vCalAddress, vText
 
-
 def main():
     rest = 'https://abc.over.nu/over/data/rest.php/'
     sessionurl = rest + 'Session'
@@ -29,13 +28,11 @@ def main():
         with open('config.json', 'w') as fh:
             json.dump(config,fh)
     
-
     payload = {"username": username, "password": password}
     session = requests.post(sessionurl, data=json.dumps(payload))
     userid = requests.get(sessionurl, cookies=session.cookies).json()['id']
 
     calres = requests.get(calurl, cookies=session.cookies, params={'id':userid}).json()
-
 
     appointments_item = calres['appointment']['item']
     appointment_dates = calres['appointment']['date']
@@ -94,7 +91,6 @@ def main():
                 event.add('description',vText(people))
                 event.add('location',locations[app_details[id]['locationid']])
                 cal.add_component(event)
-
     
     write_ics(cal,from_date, username)
 
