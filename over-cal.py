@@ -50,24 +50,13 @@ def main():
             for id in ids:
                 start = app_details[id]['starton_time']
                 startdate = datetime.strptime(
-                    datestr + ' ' + start, '%Y-%m-%d %H:%M'
+                    datestr + start, '%Y-%m-%d%H:%M'
                     )
                 end = app_details[id]['endon_time']
                 enddate = datetime.strptime(
-                    datestr + ' ' + end, '%Y-%m-%d %H:%M'
+                    datestr + end, '%Y-%m-%d%H:%M'
                     )
-
-                desc = app_details[id]['description']
-                worktype = worktypes[int(app_details[id]['typeid'])]
                 people = ''
-
-                event = Event()
-                event.add('uid', f"{id}{startdate.strftime('%Y%m%d')}")
-                event.add('summary', f'{worktype} {desc}')
-                event.add('dtstamp', from_date)
-                event.add('dtstart', startdate)
-                event.add('dtend', enddate)
-
                 for person in app_details[id]['person']:
                     if person['id'] not in [userid, '1765']:
                         if person['id'] not in contacts:
@@ -83,6 +72,18 @@ def main():
                         people += f"{contact['mobile']}, "
                         people += f"{contact['email']}\n"
 
+                summary = (
+                    worktypes[int(app_details[id]['typeid'])]
+                    + ' '
+                    + app_details[id]['description']
+                    )
+
+                event = Event()
+                event.add('uid', f"{id}{startdate.strftime('%Y%m%d')}")
+                event.add('summary', summary)
+                event.add('dtstamp', from_date)
+                event.add('dtstart', startdate)
+                event.add('dtend', enddate)
                 event.add('description', vText(people))
                 event.add('location', locations[app_details[id]['locationid']])
                 calendar.add_component(event)
@@ -109,7 +110,7 @@ def getConfig():
 
 
 def write_ics(cal, from_date, username):
-    f = open(f'{from_date.strftime("%Y-%m-%d")}_Rooster_{username}.ics', 'wb')
+    f = open('rooster.ics', 'wb')
     f.write(cal.to_ical())
     f.close()
 
