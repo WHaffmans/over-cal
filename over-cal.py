@@ -21,7 +21,11 @@ def main():
         username = input('username:')
         password = input('password:')
         weeks = int(input('Hoeveel weken wil je downloaden?'))
-        config = {'username': username,'password': password, 'weeks': weeks}
+        config = {
+            'username': username,
+            'password': password, 
+            'weeks': weeks
+            }
         with open('config.json', 'w') as fh:
             json.dump(config,fh)
     
@@ -29,14 +33,15 @@ def main():
     payload = {"username": username, "password": password}
     session = requests.post(sessionurl, data=json.dumps(payload))
     userid = requests.get(sessionurl, cookies=session.cookies).json()['id']
-    calres = requests.get(calurl, cookies=session.cookies, params={'id':userid}).json()
-    
 
-    appointments = calres['appointment']['item']
-    dates = calres['appointment']['date']
+    calres = requests.get(calurl, cookies=session.cookies, params={'id':userid}).json()
+
+
+    appointments_item = calres['appointment']['item']
+    appointment_dates = calres['appointment']['date']
     app_details = dict()
     locations = dict()
-    for id,item in appointments.items():
+    for id,item in appointments_item.items():
         app_detail = requests.get(appurl, cookies=session.cookies, params={'id':id}).json()
         app_details[id] = app_detail['item']
         if len(locations) == 0:
@@ -52,7 +57,7 @@ def main():
     cal.add('version','2.0')
     contacts = dict()
 
-    for date, ids in sorted(dates.items()):
+    for date, ids in sorted(appointment_dates.items()):
         date = datetime.strptime(date,'%Y-%m-%d')
         if len(ids) > 0 and date>from_date and date<till_date:
             datestr = date.strftime('%Y-%m-%d')
@@ -67,7 +72,7 @@ def main():
                 people = ''
 
                 event = Event()
-
+                event.add('uid', f"{id}{startdate.strftime('%Y%m%d')}")
                 event.add('summary', f'{worktype} {desc}')
                 event.add('dtstamp', from_date)
                 event.add('dtstart', startdate)
@@ -89,6 +94,8 @@ def main():
                 event.add('description',vText(people))
                 event.add('location',locations[app_details[id]['locationid']])
                 cal.add_component(event)
+
+    
     write_ics(cal,from_date, username)
 
 def write_ics(cal, from_date, username):
