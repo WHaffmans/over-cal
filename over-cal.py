@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 from icalendar import Calendar, Event, vCalAddress, vText
-import pytz
+
 
 def main():
     rest = 'https://abc.over.nu/over/data/rest.php/'
