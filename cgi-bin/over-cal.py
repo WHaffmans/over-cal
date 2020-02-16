@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import requests
 import json
 from datetime import datetime, timedelta
@@ -39,7 +41,7 @@ def main():
     worktypes = ['', 'Afspraak:', 'Bijles:', 'Begeleiding']
 
     calendar = Calendar()
-    calendar.add('prodid', '-//OVER Rooster//NOSGML//NL')
+    calendar.add('prodid', '-//OVER Rooster//abc.over.nu//NL')
     calendar.add('version', '2.0')
     contacts = dict()
 
@@ -93,7 +95,7 @@ def main():
 
 def getConfig():
     try:
-        with open('config.json', 'r') as fh:
+        with open('../config.json', 'r') as fh:
             config = json.load(fh)
 
     except FileNotFoundError:
@@ -103,16 +105,18 @@ def getConfig():
             'weeks': int(input('Hoeveel weken wil je downloaden?'))
             }
 
-        with open('config.json', 'w') as fh:
+        with open('../config.json', 'w') as fh:
             json.dump(config, fh)
 
     return config
 
 
 def write_ics(cal, from_date, username):
-    f = open('rooster.ics', 'wb')
-    f.write(cal.to_ical())
-    f.close()
+    print("Content-Type: text/calendar\n")
+    print(cal.to_ical().decode('UTF-8'))
+    # f = open('rooster.ics', 'wb')
+    # f.write(cal.to_ical())
+    # f.close()
 
 
 def login(config, url):
